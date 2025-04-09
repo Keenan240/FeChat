@@ -1,0 +1,28 @@
+from flask import Flask, request, jsonify, render_template
+from langchain_ollama import ChatOllama
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+
+app = Flask(__name__)
+
+chat_model = ChatOllama(model="llama3")
+chat_history = [
+    SystemMessage(content="You are an assistant to help students with school. Keep your answers short and to the point, and only give more details if the user asks for it"),
+]
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/chat', methods=['POST'])
+
+def chat():
+    user_input = request.json['message']
+    chat_history.append(HumanMessage(content=user_input))
+    
+    result = chat_model.invoke(chat_history)
+    chat_history.append(AIMessage(content=result.content))
+    
+    return jsonify({'response': result.content})
+
+if __name__ == '__main__':
+    app.run(debug=True)
